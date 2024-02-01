@@ -1,0 +1,125 @@
+---
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+library(here)
+library(huxtable)
+library(tidyverse)
+library(fs)
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+# Set a root directory for all chunks to be evaluated relative to rather than the document location
+knitr::opts_knit$set(root.dir = here())
+```
+
+```{r source, include=FALSE}
+here("DataBook", "Modules", "SummaryofCombinedRiskFactors") %>% 
+  # list all R files in the directory
+  fs::dir_ls(regexp = "\\.R$") %>% 
+  # scale up to all R files with a map function from purrr
+  map(source, encoding = "UTF-8", local = knitr::knit_global())
+```
+
+---
+title: "`r set_title`"
+author: "`r set_author`"
+---
+
+
+# Summary of Combined Risk Factors
+
+**Summary of Combined Risk Factors**
+
+Description: Percentage of respondents with 0, 1–2, or 3–5 of the following risk factors:
+
+- Current daily smoking
+- Less than five servings of fruit and/or vegetables per day
+- Not meeting WHO recommendations on physical activity for health (<150 minutes of moderate activity per week, or equivalent)
+- Overweight or obese (BMI ≥ 25 kg/m2)
+- Raised BP (SBP ≥ 140 and/or DBP ≥ 90 mmHg or currently on medication for raised BP).
+
+Instrument questions: combined from Step 1 and Step 2
+
+```{r raisedrisk_tbls}
+# column names to use with huxtable
+raisedrisk_col_names <- 
+  c("Age Group (years)", "n", "% with 0 risk factors", "95% CI", 
+    "% with 1-2 risk factors", "95% CI", 
+    "% with 3-5 risk factors", "95% CI")
+
+# column names for region to use with huxtable
+raisedrisk_reg_col_names <- 
+  c("Region", "n", "% with 0 risk factors", "95% CI", 
+    "% with 1-2 risk factors", "95% CI", 
+    "% with 3-5 risk factors", "95% CI")
+
+# men, women, both sexes
+raisedrisk_m_w_b <- join_tbls(raisedrisk, m_w_b, 3, raisedrisk_col_names)
+```
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# urban, rural
+raisedrisk_u_r <- join_tbls(raisedrisk, u_r, 3, raisedrisk_col_names)
+```
+
+<br>
+
+```{r}
+raisedrisk_m_w_b$m %>% final_tbl(m_w_b, 1, "Men", "Summary of Combined Risk Factors", 8)
+```
+
+<br>
+
+```{r}
+raisedrisk_m_w_b$w %>% final_tbl(m_w_b, 1, "Women", "Summary of Combined Risk Factors", 8)
+```
+
+<br>
+
+```{r}
+raisedrisk_m_w_b$b %>% final_tbl(m_w_b, 1, "Both sexes", "Summary of Combined Risk Factors", 8)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+rbind(raisedrisk_u_r$m_u, raisedrisk_u_r$m_r) %>% 
+  final_tbl(u_r, 1, "Men", "Summary of Combined Risk Factors by type of settlement", 8)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+rbind(raisedrisk_u_r$w_u, raisedrisk_u_r$w_r) %>% 
+  final_tbl(u_r, 1, "Women", "Summary of Combined Risk Factors by type of settlement", 8)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+rbind(raisedrisk_u_r$b_u, raisedrisk_u_r$b_r) %>% 
+  final_tbl(u_r, 1, "Both sexes", "Summary of Combined Risk Factors by type of settlement", 8)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# region
+raisedrisk$b_reg %>% unite_ci(.ci_amount = 3) %>% apply_hux(.col_names = raisedrisk_reg_col_names) %>% 
+  final_tbl(reg, 1, "Both sexes", "Summary of Combined Risk Factors by region", 8) 
+```
+
+<br>
+
+**Analysis information**:
+
+- Questions used: T1, T2, D1-D4, P1-P15b, M4a-M6b, M7, M8, M11, M12
+- R script name: Raisedrisk
+
+***
+
+
+
+<br>
+<br>

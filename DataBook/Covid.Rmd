@@ -1,0 +1,1359 @@
+---
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+library(here)
+library(huxtable)
+library(tidyverse)
+library(fs)
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+# Set a root directory for all chunks to be evaluated relative to rather than the document location
+knitr::opts_knit$set(root.dir = here())
+```
+
+```{r source, include=FALSE}
+here("DataBook", "Modules", "Covid") %>% 
+  # list all R files in the directory
+  fs::dir_ls(regexp = "\\.R$") %>% 
+  # scale up to all R files with a map function from purrr
+  map(source, encoding = "UTF-8", local = knitr::knit_global())
+```
+
+---
+title: "`r set_title`"
+author: "`r set_author`"
+---
+
+
+# COVID-19
+
+**Vaccination status**
+
+Description: Proportion of the population who has been vaccinated against COVID-19.
+
+Instrument questions:
+
+- Have you been vaccinated against COVID-19?
+
+```{r covac_c_tbls}
+# column names to use with huxtable
+covac_c_col_names <- c("Age Group (years)", "n", "%", "95% CI")
+covac_c_reg_col_names <- c("Region", "n", "%", "95% CI")
+
+# men, women, both sexes
+covac_c_m_w_b <- join_tbls(covac_c, m_w_b, 1, covac_c_col_names)
+```
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# urban, rural
+covac_c_u_r <- join_tbls(covac_c, u_r, 1, covac_c_col_names)
+```
+
+<br>
+
+```{r}
+cbind(covac_c_m_w_b$m, select(covac_c_m_w_b$w, -agerange), select(covac_c_m_w_b$b, -agerange)) %>% 
+  final_tbl(.disaggregation = m_w_b, .s_amount = 3, .title = "Prevalence of vaccinations against COVID-19", .colspan_val = 10)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+tbl_m_u_r <- rbind(covac_c_u_r$m_u, covac_c_u_r$m_r)
+tbl_w_u_r <- rbind(covac_c_u_r$w_u, covac_c_u_r$w_r)
+tbl_b_u_r <- rbind(covac_c_u_r$b_u, covac_c_u_r$b_r)
+
+cbind(tbl_m_u_r, select(tbl_w_u_r, -agerange2), select(tbl_b_u_r, -agerange2)) %>% 
+  final_tbl(.disaggregation = u_r, .s_amount = 3, .title = "Prevalence of vaccinations against COVID-19 by type of settlement", .colspan_val = 10)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+covac_c$b_reg %>% unite_ci(.ci_amount = 1) %>% apply_hux(.col_names = covac_c_reg_col_names) %>% 
+  final_tbl(.disaggregation = reg, .s_amount = 1, .s_val = "Both sexes", .title = "Prevalence of vaccinations against COVID-19 by region", .colspan_val = 4) 
+```
+
+<br>
+
+**Analysis information**:
+
+- Questions used: CO1
+- R script name: COvac 
+
+***
+
+
+**Vaccine doses**
+
+Description: Proportion of the population who received a various number of vaccine doses.
+
+Instrument questions:
+
+- Have you been vaccinated against COVID-19?
+- How many doses of the vaccine have you received so far?
+
+```{r covacdose_tbls, echo=FALSE}
+
+# column names to use with huxtable
+covacdose_c_col_names <- 
+  c("Age Group (years)", "n", "% 1 dose", "95% CI", "% 2 doses", "95% CI", 
+    "% 3 or more doses", "95% CI")
+
+# column names for region to use with huxtable
+covacdose_c_reg_col_names <- 
+  c("Region", "n", "% 1 dose", "95% CI", "% 2 doses", "95% CI", 
+    "% 3 or more doses", "95% CI")
+
+# men, women, both sexes
+covacdose_c_m_w_b <- join_tbls(covacdose_c, m_w_b, 3, covacdose_c_col_names)
+```
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# urban, rural
+covacdose_c_u_r <- join_tbls(covacdose_c, u_r, 3, covacdose_c_col_names)
+```
+
+<br>
+
+```{r}
+covacdose_c_m_w_b$m %>% 
+  set_contents(1, everywhere, covacdose_c_col_names) %>% 
+  final_tbl(.disaggregation = m_w_b, .s_amount = 1, .s_val = "Men", .title = "Number of vaccine doses received out of those who are vaccinated", .colspan_val = 8)
+```
+
+<br>
+
+```{r}
+covacdose_c_m_w_b$w %>% 
+  set_contents(1, everywhere, covacdose_c_col_names) %>% 
+  final_tbl(.disaggregation = m_w_b, .s_amount = 1, .s_val = "Women", .title = "Number of vaccine doses received out of those who are vaccinated", .colspan_val = 8)
+```
+
+<br>
+
+```{r}
+covacdose_c_m_w_b$b %>% 
+  set_contents(1, everywhere, covacdose_c_col_names) %>% 
+  final_tbl(.disaggregation = m_w_b, .s_amount = 1, .s_val = "Both sexes", .title = "Number of vaccine doses received out of those who are vaccinated", .colspan_val = 8)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+rbind(covacdose_c_u_r$m_u, covacdose_c_u_r$m_r) %>% 
+  set_contents(1, everywhere, covacdose_c_col_names) %>% 
+  final_tbl(.disaggregation = u_r, .s_amount = 1, .s_val = "Men", .title = "Number of vaccine doses received out of those who are vaccinated by type of settlement", .colspan_val = 8)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+rbind(covacdose_c_u_r$w_u, covacdose_c_u_r$w_r) %>% 
+  set_contents(1, everywhere, covacdose_c_col_names) %>% 
+  final_tbl(.disaggregation = u_r, .s_amount = 1, .s_val = "Women", .title = "Number of vaccine doses received out of those who are vaccinated by type of settlement", .colspan_val = 8)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+rbind(covacdose_c_u_r$b_u, covacdose_c_u_r$b_r) %>% 
+  set_contents(1, everywhere, covacdose_c_col_names) %>% 
+  final_tbl(.disaggregation = u_r, .s_amount = 1, .s_val = "Both sexes", .title = "Number of vaccine doses received out of those who are vaccinated by type of settlement", .colspan_val = 8)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# region
+covacdose_c$b_reg %>% unite_ci(.ci_amount = 3) %>% apply_hux(.col_names = covacdose_c_reg_col_names) %>% 
+  final_tbl(.disaggregation = reg, .s_amount = 1, .s_val = "Both sexes", .title = "Number of vaccine doses received out of those who are vaccinated by region", .colspan_val = 8)
+```
+
+<br>
+
+**Analysis information**:
+
+- Questions used: CO1, CO2
+- R script name:  COvacdose
+
+***
+
+
+**Vaccination year**
+
+Description: Percentage of vaccinated population by year.
+
+Instrument questions:
+
+- Have you been vaccinated against COVID-19?
+- When was the last time you have been vaccinated?
+
+```{r covactime_tbls, echo=FALSE}
+
+# column names to use with huxtable
+covactime_col_names <- 
+  c("Age Group (years)", "n", "% 2020", "95% CI",
+    "% 2021", "95% CI", "% 2022", "95% CI", "% 2023", "95% CI")
+
+# column names for region to use with huxtable
+covactime_reg_col_names <- 
+  c("Region", "n", "% 2020", "95% CI",
+    "% 2021", "95% CI", "% 2022", "95% CI", "% 2023", "95% CI")
+
+# men, women, both sexes
+covactime_c_m_w_b <- join_tbls(covactime_c, m_w_b, 4, covactime_col_names)
+```
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# urban, rural
+covactime_c_u_r <- join_tbls(covactime_c, u_r, 4, covactime_col_names)
+```
+
+<br>
+
+```{r}
+covactime_c_m_w_b$m %>% 
+  final_tbl(.disaggregation = m_w_b, .s_val = "Men", .s_amount = 1, .title = "Proportion of the population who had various time of the last vaccination", .colspan_val = 10)
+```
+
+<br>
+
+```{r}
+covactime_c_m_w_b$w %>% 
+  final_tbl(.disaggregation = m_w_b, .s_val = "Women", .s_amount = 1, .title = "Proportion of the population who had various time of the last vaccination", .colspan_val = 10)
+```
+
+<br>
+
+```{r}
+covactime_c_m_w_b$b %>% 
+  final_tbl(.disaggregation = m_w_b, .s_val = "Both sexes", .s_amount = 1, .title = "Proportion of the population who had various time of the last vaccination", .colspan_val = 10)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+rbind(covactime_c_u_r$m_u, covactime_c_u_r$m_r) %>% 
+  final_tbl(.disaggregation = u_r, .s_val = "Men", .s_amount = 1, .title = "Proportion of the population who had various time of the last vaccination by type of settlement", .colspan_val = 10)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+rbind(covactime_c_u_r$w_u, covactime_c_u_r$w_r) %>% 
+  final_tbl(.disaggregation = u_r, .s_val = "Women", .s_amount = 1, .title = "Proportion of the population who had various time of the last vaccination by type of settlement", .colspan_val = 10)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+rbind(covactime_c_u_r$b_u, covactime_c_u_r$b_r) %>% 
+  final_tbl(.disaggregation = u_r, .s_val = "Both sexes", .s_amount = 1, .title = "Proportion of the population who had various time of the last vaccination by type of settlement", .colspan_val = 10)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# region
+covactime_c$b_reg %>% unite_ci(.ci_amount = 4) %>% apply_hux(.col_names = covactime_reg_col_names) %>% 
+  final_tbl(.disaggregation = reg, .s_amount = 1, .s_val = "Both sexes", .title = "Proportion of the population who had various time of the last vaccination by region", .colspan_val = 10)
+```
+<br>
+
+**Analysis information**:
+
+- Questions used: CO1, CO2, CO2a
+- R script name:  COvactime
+
+***
+
+
+
+**Reasons for unvaccinating**
+
+Description: Proportion of the population who had reasons to explain why they are unvaccinated at this time.
+
+Instrument questions:
+
+- Have you been vaccinated against COVID-19?
+- Which of the following reasons explain why you are unvaccinated at this time:
+a. Inconvenient location of the health facility that offers the vaccine
+b. Preferred vaccine option is unavailable
+c. You have a medical condition that makes the vaccine unsafe for you
+d. Health worker has not recommended the COVID-19 vaccine
+e. You have concerns about a severe reaction to the vaccine
+f. You do not think the vaccine is safe in general
+g. You do not think the vaccine will protect you against severe disease from COVID-19 infection 
+h. You believe there might be long-term side effects of the vaccine
+i. You do not trust the government/medical authorities
+j. You have no concerns about getting infected with COVID-19
+k. You believe that natural immunity is better than getting vaccinated
+l. Other reason
+
+```{r coreason_tbls}
+# column names to use with huxtable
+coreason_col_names <- c("Age Group (years)", "n", "%", "95% CI")
+coreason_reg_col_names <- c("Region", "n", "%", "95% CI")
+
+# men, women, both sexes
+# 1 (a) - Inconvenient location of the health facility that offers the vaccine
+coreason_a_m_w_b <- join_tbls(coreason_a, m_w_b, 1, coreason_col_names)
+# 2 (b) - Preferred vaccine option is unavailable
+coreason_b_m_w_b <- join_tbls(coreason_b, m_w_b, 1, coreason_col_names)
+# 3 (c) - Medical condition that makes the vaccine unsafe for the participant
+coreason_c_m_w_b <- join_tbls(coreason_c, m_w_b, 1, coreason_col_names)
+# 4 (d) - Health worker has not recommended the COVID-19 vaccine
+coreason_d_m_w_b <- join_tbls(coreason_d, m_w_b, 1, coreason_col_names)
+# 5 (e) - Concerns about a severe reaction to the vaccine
+coreason_e_m_w_b <- join_tbls(coreason_e, m_w_b, 1, coreason_col_names)
+# 6 (f) - Think the vaccine is unsafe in general
+coreason_f_m_w_b <- join_tbls(coreason_f, m_w_b, 1, coreason_col_names)
+# 7 (g) - Think the vaccine will not protect them against severe disease from COVID-19 infection
+coreason_g_m_w_b <- join_tbls(coreason_g, m_w_b, 1, coreason_col_names)
+# 8 (h) - Believe there might be long-term side effects of the vaccine
+coreason_h_m_w_b <- join_tbls(coreason_h, m_w_b, 1, coreason_col_names)
+# 9 (i) - No trust in the government/medical authorities
+coreason_i_m_w_b <- join_tbls(coreason_i, m_w_b, 1, coreason_col_names)
+# 10 (j) - No concerns about getting infected with COVID-19
+coreason_j_m_w_b <- join_tbls(coreason_j, m_w_b, 1, coreason_col_names)
+# 11 (k) - Believe that natural immunity is better than getting vaccinated
+coreason_k_m_w_b <- join_tbls(coreason_k, m_w_b, 1, coreason_col_names)
+# 12 (l) - Other reason
+coreason_l_m_w_b <- join_tbls(coreason_l, m_w_b, 1, coreason_col_names)
+```
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# urban, rural
+# 1 - Inconvenient location of the health facility that offers the vaccine
+coreason_a_u_r <- join_tbls(coreason_a, u_r, 1, coreason_col_names)
+# 2 - Preferred vaccine option is unavailable
+coreason_b_u_r <- join_tbls(coreason_b, u_r, 1, coreason_col_names)
+# 3 - Medical condition that makes the vaccine unsafe for the participant
+coreason_c_u_r <- join_tbls(coreason_c, u_r, 1, coreason_col_names)
+# 4 - Health worker has not recommended the COVID-19 vaccine
+coreason_d_u_r <- join_tbls(coreason_d, u_r, 1, coreason_col_names)
+# 5 - Concerns about a severe reaction to the vaccine
+coreason_e_u_r <- join_tbls(coreason_e, u_r, 1, coreason_col_names)
+# 6 - Think the vaccine is unsafe in general
+coreason_f_u_r <- join_tbls(coreason_f, u_r, 1, coreason_col_names)
+# 7 - Think the vaccine will not protect them against severe disease from COVID-19 infection
+coreason_g_u_r <- join_tbls(coreason_g, u_r, 1, coreason_col_names)
+# 8 - Believe there might be long-term side effects of the vaccine
+coreason_h_u_r <- join_tbls(coreason_h, u_r, 1, coreason_col_names)
+# 9 - No trust in the government/medical authorities
+coreason_i_u_r <- join_tbls(coreason_i, u_r, 1, coreason_col_names)
+# 10 - No concerns about getting infected with COVID-19
+coreason_j_u_r <- join_tbls(coreason_j, u_r, 1, coreason_col_names)
+# 11 - Believe that natural immunity is better than getting vaccinated
+coreason_k_u_r <- join_tbls(coreason_k, u_r, 1, coreason_col_names)
+# 12 - Other reason
+coreason_l_u_r <- join_tbls(coreason_l, u_r, 1, coreason_col_names)
+
+```
+
+<br>
+
+```{r}
+# 1
+cbind(coreason_a_m_w_b$m, select(coreason_a_m_w_b$w, -agerange), select(coreason_a_m_w_b$b, -agerange)) %>% final_tbl(.disaggregation = m_w_b, .s_amount = 3, .title = "Inconvenient location of the health facility that offers the vaccine", .colspan_val = 10)
+```
+
+<br>
+
+```{r}
+# 2
+cbind(coreason_b_m_w_b$m, select(coreason_b_m_w_b$w, -agerange), select(coreason_b_m_w_b$b, -agerange)) %>% final_tbl(.disaggregation = m_w_b, .s_amount = 3, .title = "Preferred vaccine option is unavailable", .colspan_val = 10)
+```
+
+<br>
+
+```{r}
+# 3
+cbind(coreason_c_m_w_b$m, select(coreason_c_m_w_b$w, -agerange), select(coreason_c_m_w_b$b, -agerange)) %>% final_tbl(.disaggregation = m_w_b, .s_amount = 3, .title = "Medical condition that makes the vaccine unsafe for the participant", .colspan_val = 10)
+```
+
+<br>
+
+```{r}
+# 4
+cbind(coreason_d_m_w_b$m, select(coreason_d_m_w_b$w, -agerange), select(coreason_d_m_w_b$b, -agerange)) %>% final_tbl(.disaggregation = m_w_b, .s_amount = 3, .title = "Health worker has not recommended the COVID-19 vaccine", .colspan_val = 10)
+```
+
+<br>
+
+```{r}
+# 5
+cbind(coreason_e_m_w_b$m, select(coreason_e_m_w_b$w, -agerange), select(coreason_e_m_w_b$b, -agerange)) %>% final_tbl(.disaggregation = m_w_b, .s_amount = 3, .title = "Concerns about a severe reaction to the vaccine", .colspan_val = 10)
+```
+
+<br>
+
+```{r}
+# 6
+cbind(coreason_f_m_w_b$m, select(coreason_f_m_w_b$w, -agerange), select(coreason_f_m_w_b$b, -agerange)) %>% final_tbl(.disaggregation = m_w_b, .s_amount = 3, .title = "Think the vaccine is unsafe in general", .colspan_val = 10)
+```
+
+<br>
+
+```{r}
+# 7
+cbind(coreason_g_m_w_b$m, select(coreason_g_m_w_b$w, -agerange), select(coreason_g_m_w_b$b, -agerange)) %>% final_tbl(.disaggregation = m_w_b, .s_amount = 3, .title = "Think the vaccine will not protect them against severe disease from COVID-19 infection", .colspan_val = 10)
+```
+
+<br>
+
+```{r}
+# 8
+cbind(coreason_h_m_w_b$m, select(coreason_h_m_w_b$w, -agerange), select(coreason_h_m_w_b$b, -agerange)) %>% final_tbl(.disaggregation = m_w_b, .s_amount = 3, .title = "Believe there might be long-term side effects of the vaccine", .colspan_val = 10)
+```
+
+<br>
+
+```{r}
+# 9
+cbind(coreason_i_m_w_b$m, select(coreason_i_m_w_b$w, -agerange), select(coreason_i_m_w_b$b, -agerange)) %>% final_tbl(.disaggregation = m_w_b, .s_amount = 3, .title = "No trust in the government/medical authorities", .colspan_val = 10)
+```
+
+<br>
+
+```{r}
+# 10
+cbind(coreason_j_m_w_b$m, select(coreason_j_m_w_b$w, -agerange), select(coreason_j_m_w_b$b, -agerange)) %>% final_tbl(.disaggregation = m_w_b, .s_amount = 3, .title = "No concerns about getting infected with COVID-19", .colspan_val = 10)
+```
+
+<br>
+
+```{r}
+# 11
+cbind(coreason_k_m_w_b$m, select(coreason_k_m_w_b$w, -agerange), select(coreason_k_m_w_b$b, -agerange)) %>% final_tbl(.disaggregation = m_w_b, .s_amount = 3, .title = "Believe that natural immunity is better than getting vaccinated", .colspan_val = 10)
+```
+
+<br>
+
+```{r}
+# 12
+cbind(coreason_l_m_w_b$m, select(coreason_l_m_w_b$w, -agerange), select(coreason_l_m_w_b$b, -agerange)) %>% final_tbl(.disaggregation = m_w_b, .s_amount = 3, .title = "Other reason", .colspan_val = 10)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# 1
+tbl_m_u_r <- rbind(coreason_a_u_r$m_u, coreason_a_u_r$m_r)
+tbl_w_u_r <- rbind(coreason_a_u_r$w_u, coreason_a_u_r$w_r)
+tbl_b_u_r <- rbind(coreason_a_u_r$b_u, coreason_a_u_r$b_r)
+
+cbind(tbl_m_u_r, select(tbl_w_u_r, -agerange2), select(tbl_b_u_r, -agerange2)) %>% 
+  final_tbl(.disaggregation = u_r, .s_amount = 3, .title = "Inconvenient location of the health facility that offers the vaccine by type of settlement", .colspan_val = 10)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# 2
+tbl_m_u_r <- rbind(coreason_b_u_r$m_u, coreason_b_u_r$m_r)
+tbl_w_u_r <- rbind(coreason_b_u_r$w_u, coreason_b_u_r$w_r)
+tbl_b_u_r <- rbind(coreason_b_u_r$b_u, coreason_b_u_r$b_r)
+
+cbind(tbl_m_u_r, select(tbl_w_u_r, -agerange2), select(tbl_b_u_r, -agerange2)) %>% 
+  final_tbl(.disaggregation = u_r, .s_amount = 3, .title = "Preferred vaccine option is unavailable by type of settlement", .colspan_val = 10)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# 3
+tbl_m_u_r <- rbind(coreason_c_u_r$m_u, coreason_c_u_r$m_r)
+tbl_w_u_r <- rbind(coreason_c_u_r$w_u, coreason_c_u_r$w_r)
+tbl_b_u_r <- rbind(coreason_c_u_r$b_u, coreason_c_u_r$b_r)
+
+cbind(tbl_m_u_r, select(tbl_w_u_r, -agerange2), select(tbl_b_u_r, -agerange2)) %>% 
+  final_tbl(.disaggregation = u_r, .s_amount = 3, .title = "Medical condition that makes the vaccine unsafe for the participant by type of settlement", .colspan_val = 10)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# 4
+tbl_m_u_r <- rbind(coreason_d_u_r$m_u, coreason_d_u_r$m_r)
+tbl_w_u_r <- rbind(coreason_d_u_r$w_u, coreason_d_u_r$w_r)
+tbl_b_u_r <- rbind(coreason_d_u_r$b_u, coreason_d_u_r$b_r)
+
+cbind(tbl_m_u_r, select(tbl_w_u_r, -agerange2), select(tbl_b_u_r, -agerange2)) %>% 
+  final_tbl(.disaggregation = u_r, .s_amount = 3, .title = "Health worker has not recommended the COVID-19 vaccine by type of settlement", .colspan_val = 10)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# 5
+tbl_m_u_r <- rbind(coreason_e_u_r$m_u, coreason_e_u_r$m_r)
+tbl_w_u_r <- rbind(coreason_e_u_r$w_u, coreason_e_u_r$w_r)
+tbl_b_u_r <- rbind(coreason_e_u_r$b_u, coreason_e_u_r$b_r)
+
+cbind(tbl_m_u_r, select(tbl_w_u_r, -agerange2), select(tbl_b_u_r, -agerange2)) %>% 
+  final_tbl(.disaggregation = u_r, .s_amount = 3, .title = "Concerns about a severe reaction to the vaccine by type of settlement", .colspan_val = 10)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# 6
+tbl_m_u_r <- rbind(coreason_f_u_r$m_u, coreason_f_u_r$m_r)
+tbl_w_u_r <- rbind(coreason_f_u_r$w_u, coreason_f_u_r$w_r)
+tbl_b_u_r <- rbind(coreason_f_u_r$b_u, coreason_f_u_r$b_r)
+
+cbind(tbl_m_u_r, select(tbl_w_u_r, -agerange2), select(tbl_b_u_r, -agerange2)) %>% 
+  final_tbl(.disaggregation = u_r, .s_amount = 3, .title = "Think the vaccine is unsafe in general by type of settlement", .colspan_val = 10)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# 7
+tbl_m_u_r <- rbind(coreason_g_u_r$m_u, coreason_g_u_r$m_r)
+tbl_w_u_r <- rbind(coreason_g_u_r$w_u, coreason_g_u_r$w_r)
+tbl_b_u_r <- rbind(coreason_g_u_r$b_u, coreason_g_u_r$b_r)
+
+cbind(tbl_m_u_r, select(tbl_w_u_r, -agerange2), select(tbl_b_u_r, -agerange2)) %>% 
+  final_tbl(.disaggregation = u_r, .s_amount = 3, .title = "Think the vaccine will not protect them against severe disease from COVID-19 infection by type of settlement", .colspan_val = 10)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# 8
+tbl_m_u_r <- rbind(coreason_h_u_r$m_u, coreason_h_u_r$m_r)
+tbl_w_u_r <- rbind(coreason_h_u_r$w_u, coreason_h_u_r$w_r)
+tbl_b_u_r <- rbind(coreason_h_u_r$b_u, coreason_h_u_r$b_r)
+
+cbind(tbl_m_u_r, select(tbl_w_u_r, -agerange2), select(tbl_b_u_r, -agerange2)) %>% 
+  final_tbl(.disaggregation = u_r, .s_amount = 3, .title = "Believe there might be long-term side effects of the vaccine by type of settlement", .colspan_val = 10)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# 9
+tbl_m_u_r <- rbind(coreason_i_u_r$m_u, coreason_i_u_r$m_r)
+tbl_w_u_r <- rbind(coreason_i_u_r$w_u, coreason_i_u_r$w_r)
+tbl_b_u_r <- rbind(coreason_i_u_r$b_u, coreason_i_u_r$b_r)
+
+cbind(tbl_m_u_r, select(tbl_w_u_r, -agerange2), select(tbl_b_u_r, -agerange2)) %>% 
+  final_tbl(.disaggregation = u_r, .s_amount = 3, .title = "No trust in the government/medical authorities by type of settlement", .colspan_val = 10)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# 10
+tbl_m_u_r <- rbind(coreason_j_u_r$m_u, coreason_j_u_r$m_r)
+tbl_w_u_r <- rbind(coreason_j_u_r$w_u, coreason_j_u_r$w_r)
+tbl_b_u_r <- rbind(coreason_j_u_r$b_u, coreason_j_u_r$b_r)
+
+cbind(tbl_m_u_r, select(tbl_w_u_r, -agerange2), select(tbl_b_u_r, -agerange2)) %>% 
+  final_tbl(.disaggregation = u_r, .s_amount = 3, .title = "No concerns about getting infected with COVID-19 by type of settlement", .colspan_val = 10)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# 11
+tbl_m_u_r <- rbind(coreason_k_u_r$m_u, coreason_k_u_r$m_r)
+tbl_w_u_r <- rbind(coreason_k_u_r$w_u, coreason_k_u_r$w_r)
+tbl_b_u_r <- rbind(coreason_k_u_r$b_u, coreason_k_u_r$b_r)
+
+cbind(tbl_m_u_r, select(tbl_w_u_r, -agerange2), select(tbl_b_u_r, -agerange2)) %>% 
+  final_tbl(.disaggregation = u_r, .s_amount = 3, .title = "Believe that natural immunity is better than getting vaccinated by type of settlement", .colspan_val = 10)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# 12
+tbl_m_u_r <- rbind(coreason_l_u_r$m_u, coreason_l_u_r$m_r)
+tbl_w_u_r <- rbind(coreason_l_u_r$w_u, coreason_l_u_r$w_r)
+tbl_b_u_r <- rbind(coreason_l_u_r$b_u, coreason_l_u_r$b_r)
+
+cbind(tbl_m_u_r, select(tbl_w_u_r, -agerange2), select(tbl_b_u_r, -agerange2)) %>% 
+  final_tbl(.disaggregation = u_r, .s_amount = 3, .title = "Other reason by type of settlement", .colspan_val = 10)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# 1
+coreason_a$b_reg %>% unite_ci(.ci_amount = 1) %>% apply_hux(.col_names = coreason_reg_col_names) %>% final_tbl(reg, 1, "Both sexes", "Inconvenient location of the health facility that offers the vaccine by region", 4)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# 2
+coreason_b$b_reg %>% unite_ci(.ci_amount = 1) %>% apply_hux(.col_names = coreason_reg_col_names) %>% final_tbl(reg, 1, "Both sexes", "Preferred vaccine option is unavailable by region", 4)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# 3
+coreason_c$b_reg %>% unite_ci(.ci_amount = 1) %>% apply_hux(.col_names = coreason_reg_col_names) %>% final_tbl(reg, 1, "Both sexes", "Medical condition that makes the vaccine unsafe for the participant by region", 4)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# 4
+coreason_d$b_reg %>% unite_ci(.ci_amount = 1) %>% apply_hux(.col_names = coreason_reg_col_names) %>% final_tbl(reg, 1, "Both sexes", "Health worker has not recommended the COVID-19 vaccine by region", 4)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# 5
+coreason_e$b_reg %>% unite_ci(.ci_amount = 1) %>% apply_hux(.col_names = coreason_reg_col_names) %>% final_tbl(reg, 1, "Both sexes", "Concerns about a severe reaction to the vaccine by region", 4)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# 6
+coreason_f$b_reg %>% unite_ci(.ci_amount = 1) %>% apply_hux(.col_names = coreason_reg_col_names) %>% final_tbl(reg, 1, "Both sexes", "Think the vaccine is unsafe in general by region", 4)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# 7
+coreason_g$b_reg %>% unite_ci(.ci_amount = 1) %>% apply_hux(.col_names = coreason_reg_col_names) %>% final_tbl(reg, 1, "Both sexes", "Think the vaccine will not protect them against severe disease from COVID-19 infection by region", 4)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# 8
+coreason_h$b_reg %>% unite_ci(.ci_amount = 1) %>% apply_hux(.col_names = coreason_reg_col_names) %>% final_tbl(reg, 1, "Both sexes", "Believe there might be long-term side effects of the vaccine by region", 4)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# 9
+coreason_i$b_reg %>% unite_ci(.ci_amount = 1) %>% apply_hux(.col_names = coreason_reg_col_names) %>% final_tbl(reg, 1, "Both sexes", "No trust in the government/medical authorities by region", 4)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# 10
+coreason_j$b_reg %>% unite_ci(.ci_amount = 1) %>% apply_hux(.col_names = coreason_reg_col_names) %>% final_tbl(reg, 1, "Both sexes", "No concerns about getting infected with COVID-19 by region", 4)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# 11
+coreason_k$b_reg %>% unite_ci(.ci_amount = 1) %>% apply_hux(.col_names = coreason_reg_col_names) %>% final_tbl(reg, 1, "Both sexes", "Believe that natural immunity is better than getting vaccinated by region", 4)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# 12
+coreason_l$b_reg %>% unite_ci(.ci_amount = 1) %>% apply_hux(.col_names = coreason_reg_col_names) %>% final_tbl(reg, 1, "Both sexes", "Other reason by region", 4)
+```
+
+<br>
+
+**Analysis information**:
+
+-   Questions used: CO3a-l
+-   R script name: COreason
+
+***
+
+
+**Previous infection**
+
+Description: Proportion of the population who reasonably believe that they have had a COVID-19 infection.
+
+Instrument questions:
+
+- Do you reasonably believe that you have had a COVID-19 infection?
+
+```{r coinfect_tbls, echo=FALSE}
+
+# column names to use with huxtable
+coinfect_c_col_names <- 
+  c("Age Group (years)", "n", "% Yes, had it once", "95% CI", 
+    "% Yes, had it multiple times", "95% CI", 
+    "% No", "95% CI")
+
+# column names for region to use with huxtable
+coinfect_c_reg_col_names <- 
+  c("Region", "n", "% Yes, had it once", "95% CI", 
+    "% Yes, had it multiple times", "95% CI", 
+    "% No", "95% CI")
+
+# men, women, both sexes
+coinfect_c_m_w_b <- join_tbls(coinfect_c, m_w_b, 3, coinfect_c_col_names)
+```
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# urban, rural
+coinfect_c_u_r <- join_tbls(coinfect_c, u_r, 3, coinfect_c_col_names)
+```
+
+<br>
+
+```{r}
+coinfect_c_m_w_b$m %>% 
+  set_contents(1, everywhere, coinfect_c_col_names) %>% 
+  final_tbl(.disaggregation = m_w_b, .s_amount = 1, .s_val = "Men", .title = "Percentage of those who reasonably believe they have had a COVID-19 infection", .colspan_val = 8)
+```
+
+<br>
+
+```{r}
+coinfect_c_m_w_b$w %>% 
+  set_contents(1, everywhere, coinfect_c_col_names) %>% 
+  final_tbl(.disaggregation = m_w_b, .s_amount = 1, .s_val = "Women", .title = "Percentage of those who reasonably believe they have had a COVID-19 infection", .colspan_val = 8)
+```
+
+<br>
+
+```{r}
+coinfect_c_m_w_b$b %>% 
+  set_contents(1, everywhere, coinfect_c_col_names) %>% 
+  final_tbl(.disaggregation = m_w_b, .s_amount = 1, .s_val = "Both sexes", .title = "Percentage of those who reasonably believe they have had a COVID-19 infection", .colspan_val = 8)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+rbind(coinfect_c_u_r$m_u, coinfect_c_u_r$m_r) %>% 
+  set_contents(1, everywhere, coinfect_c_col_names) %>% 
+  final_tbl(.disaggregation = u_r, .s_amount = 1, .s_val = "Men", .title = "Percentage of those who reasonably believe they have had a COVID-19 infection by type of settlement", .colspan_val = 8)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+rbind(coinfect_c_u_r$w_u, coinfect_c_u_r$w_r) %>% 
+  set_contents(1, everywhere, coinfect_c_col_names) %>% 
+  final_tbl(.disaggregation = u_r, .s_amount = 1, .s_val = "Women", .title = "Percentage of those who reasonably believe they have had a COVID-19 infection by type of settlement", .colspan_val = 8)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+rbind(coinfect_c_u_r$b_u, coinfect_c_u_r$b_r) %>% 
+  set_contents(1, everywhere, coinfect_c_col_names) %>% 
+  final_tbl(.disaggregation = u_r, .s_amount = 1, .s_val = "Both sexes", .title = "Percentage of those who reasonably believe they have had a COVID-19 infection by type of settlement", .colspan_val = 8)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# region
+coinfect_c$b_reg %>% unite_ci(.ci_amount = 3) %>% apply_hux(.col_names = coinfect_c_reg_col_names) %>% 
+  final_tbl(.disaggregation = reg, .s_amount = 1, .s_val = "Both sexes", .title = "Percentage of those who reasonably believe they have had a COVID-19 infection by region", .colspan_val = 8)
+```
+
+<br>
+
+**Analysis information**:
+
+- Questions used: CO4
+- R script name:  COinfect
+
+***
+
+**Infection confirmed**
+
+Description: Proportion of the population who had their infection either confirmed or not by a test out of those who reasonably believe they have had a COVID-19 infection.
+
+Instrument questions:
+
+- Do you reasonably believe that you have had a COVID-19 infection?
+- Was the infection confirmed by a test?
+
+```{r coconfirm_tbls, echo=FALSE}
+
+# column names to use with huxtable
+coconfirm_col_names <- 
+  c("Age Group (years)", "n", "% Yes, tested positive", "95% CI",
+    "% No, tested negative", "95% CI", "% No, didn't want to get tested", "95% CI", 
+    "% No, test was unavailable", "95% CI")
+
+# column names for region to use with huxtable
+coconfirm_reg_col_names <- 
+  c("Region", "n", "% Yes, tested positive", "95% CI",
+    "% No, tested negative", "95% CI", "% No, didn't want to get tested", "95% CI", 
+    "% No, test was unavailable", "95% CI")
+
+# men, women, both sexes
+coconfirm_c_m_w_b <- join_tbls(coconfirm_c, m_w_b, 4, coconfirm_col_names)
+```
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# urban, rural
+coconfirm_c_u_r <- join_tbls(coconfirm_c, u_r, 4, coconfirm_col_names)
+```
+
+<br>
+
+```{r}
+coconfirm_c_m_w_b$m %>% 
+  final_tbl(.disaggregation = m_w_b, .s_val = "Men", .s_amount = 1, .title = "Proportion of the population with confirmed COVID-19 infections by a test", .colspan_val = 10)
+```
+
+<br>
+
+```{r}
+coconfirm_c_m_w_b$w %>% 
+  final_tbl(.disaggregation = m_w_b, .s_val = "Women", .s_amount = 1, .title = "Proportion of the population with confirmed COVID-19 infections by a test", .colspan_val = 10)
+```
+
+<br>
+
+```{r}
+coconfirm_c_m_w_b$b %>% 
+  final_tbl(.disaggregation = m_w_b, .s_val = "Both sexes", .s_amount = 1, .title = "Proportion of the population with confirmed COVID-19 infections by a test", .colspan_val = 10)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+rbind(coconfirm_c_u_r$m_u, coconfirm_c_u_r$m_r) %>% 
+  final_tbl(.disaggregation = u_r, .s_val = "Men", .s_amount = 1, .title = "Proportion of the population with confirmed COVID-19 infections by a test by type of settlement", .colspan_val = 10)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+rbind(coconfirm_c_u_r$w_u, coconfirm_c_u_r$w_r) %>% 
+  final_tbl(.disaggregation = u_r, .s_val = "Women", .s_amount = 1, .title = "Proportion of the population with confirmed COVID-19 infections by a test by type of settlement", .colspan_val = 10)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+rbind(coconfirm_c_u_r$b_u, coconfirm_c_u_r$b_r) %>% 
+  final_tbl(.disaggregation = u_r, .s_val = "Both sexes", .s_amount = 1, .title = "Proportion of the population with confirmed COVID-19 infections by a test by type of settlement", .colspan_val = 10)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# region
+coconfirm_c$b_reg %>% unite_ci(.ci_amount = 4) %>% apply_hux(.col_names = coconfirm_reg_col_names) %>% 
+  final_tbl(.disaggregation = reg, .s_amount = 1, .s_val = "Both sexes", .title = "Proportion of the population with confirmed COVID-19 infections by a test by region", .colspan_val = 10)
+```
+<br>
+
+**Analysis information**:
+
+- Questions used: CO4, CO4a
+- R script name:  COconfirm
+
+***
+
+
+**Long COVID symptoms**
+
+Description: Proportion of the population who had symptoms lasting longer than 2 months after the acute infection, which may imply that they may have "Long COVID" or "Post-COVID condition".
+
+Instrument questions:
+
+- Do you reasonably believe that you have had a COVID-19 infection?
+- Did you have symptoms which lasted longer than 2 months after the acute infection, which may imply that you may have "Long COVID" or "Post-COVID condition"?
+
+```{r cosymptom_c_tbls}
+# column names to use with huxtable
+cosymptom_c_col_names <- c("Age Group (years)", "n", "%", "95% CI")
+cosymptom_c_reg_col_names <- c("Region", "n", "%", "95% CI")
+
+# men, women, both sexes
+cosymptom_c_m_w_b <- join_tbls(cosymptom_c, m_w_b, 1, cosymptom_c_col_names)
+```
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# urban, rural
+cosymptom_c_u_r <- join_tbls(cosymptom_c, u_r, 1, cosymptom_c_col_names)
+```
+
+<br>
+
+```{r}
+cbind(cosymptom_c_m_w_b$m, select(cosymptom_c_m_w_b$w, -agerange), select(cosymptom_c_m_w_b$b, -agerange)) %>% 
+  final_tbl(.disaggregation = m_w_b, .s_amount = 3, .title = "Prevalance of long COVID symptoms", .colspan_val = 10)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+tbl_m_u_r <- rbind(cosymptom_c_u_r$m_u, cosymptom_c_u_r$m_r)
+tbl_w_u_r <- rbind(cosymptom_c_u_r$w_u, cosymptom_c_u_r$w_r)
+tbl_b_u_r <- rbind(cosymptom_c_u_r$b_u, cosymptom_c_u_r$b_r)
+
+cbind(tbl_m_u_r, select(tbl_w_u_r, -agerange2), select(tbl_b_u_r, -agerange2)) %>% 
+  final_tbl(.disaggregation = u_r, .s_amount = 3, .title = "Prevalance of long COVID symptoms by type of settlement", .colspan_val = 10)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+cosymptom_c$b_reg %>% unite_ci(.ci_amount = 1) %>% apply_hux(.col_names = cosymptom_c_reg_col_names) %>% 
+  final_tbl(.disaggregation = reg, .s_amount = 1, .s_val = "Both sexes", .title = "Prevalance of long COVID symptoms by region", .colspan_val = 4) 
+```
+
+<br>
+
+**Analysis information**:
+
+- Questions used: CO4, CO5
+- R script name: COsymptom
+
+***
+
+
+
+**Healthcare services use**
+
+Description: Proportion of the population with symptoms of Long COVID who utilized healthcare services.
+
+Instrument questions:
+
+- Did you have symptoms which lasted longer than 2 months after the acute infection, which may imply that you may have "Long COVID" or "Post-COVID condition"?
+- Have you utilized any of the following healthcare services for those long-term symptoms:
+a. Primary healthcare services
+b. Specialized healthcare services (e.g., hospital)
+c. Other healthcare services
+
+```{r coservice_tbls}
+# column names to use with huxtable
+coservice_col_names <- c("Age Group (years)", "n", "% Utilized", "95% CI")
+coservice_reg_col_names <- c("Region", "n", "% Utilized", "95% CI")
+
+# men, women, both sexes
+# 1 (a) - Utilized primary healthcare services
+coservice_a_m_w_b <- join_tbls(coservice_a, m_w_b, 1, coservice_col_names)
+
+# 2 (b) - Utilized specialized healthcare services (e.g., hospital)
+coservice_b_m_w_b <- join_tbls(coservice_b, m_w_b, 1, coservice_col_names)
+
+# 3 (c) - Utilized other healthcare services
+coservice_c_m_w_b <- join_tbls(coservice_c, m_w_b, 1, coservice_col_names)
+```
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# urban, rural
+# 1 - Utilized primary healthcare services
+coservice_a_u_r <- join_tbls(coservice_a, u_r, 1, coservice_col_names)
+# 2 - Utilized specialized healthcare services (e.g., hospital)
+coservice_b_u_r <- join_tbls(coservice_b, u_r, 1, coservice_col_names)
+# 3 - Utilized other healthcare services
+coservice_c_u_r <- join_tbls(coservice_c, u_r, 1, coservice_col_names)
+```
+
+<br>
+
+```{r}
+# 1
+cbind(coservice_a_m_w_b$m, select(coservice_a_m_w_b$w, -agerange), select(coservice_a_m_w_b$b, -agerange)) %>% final_tbl(.disaggregation = m_w_b, .s_amount = 3, .title = "Utilized primary healthcare services", .colspan_val = 10)
+```
+
+<br>
+
+```{r}
+# 2
+cbind(coservice_b_m_w_b$m, select(coservice_b_m_w_b$w, -agerange), select(coservice_b_m_w_b$b, -agerange)) %>% final_tbl(.disaggregation = m_w_b, .s_amount = 3, .title = "Utilized specialized healthcare services (e.g., hospital)", .colspan_val = 10)
+```
+
+<br>
+
+```{r}
+# 3
+cbind(coservice_c_m_w_b$m, select(coservice_c_m_w_b$w, -agerange), select(coservice_c_m_w_b$b, -agerange)) %>% final_tbl(.disaggregation = m_w_b, .s_amount = 3, .title = "Utilized other healthcare services", .colspan_val = 10)
+```
+
+<br>
+
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# 1
+tbl_m_u_r <- rbind(coservice_a_u_r$m_u, coservice_a_u_r$m_r)
+tbl_w_u_r <- rbind(coservice_a_u_r$w_u, coservice_a_u_r$w_r)
+tbl_b_u_r <- rbind(coservice_a_u_r$b_u, coservice_a_u_r$b_r)
+
+cbind(tbl_m_u_r, select(tbl_w_u_r, -agerange2), select(tbl_b_u_r, -agerange2)) %>% 
+  final_tbl(.disaggregation = u_r, .s_amount = 3, .title = "Utilized primary healthcare services by type of settlement", .colspan_val = 10)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# 2
+tbl_m_u_r <- rbind(coservice_b_u_r$m_u, coservice_b_u_r$m_r)
+tbl_w_u_r <- rbind(coservice_b_u_r$w_u, coservice_b_u_r$w_r)
+tbl_b_u_r <- rbind(coservice_b_u_r$b_u, coservice_b_u_r$b_r)
+
+cbind(tbl_m_u_r, select(tbl_w_u_r, -agerange2), select(tbl_b_u_r, -agerange2)) %>% 
+  final_tbl(.disaggregation = u_r, .s_amount = 3, .title = "Utilized specialized healthcare services (e.g., hospital) by type of settlement", .colspan_val = 10)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# 3
+tbl_m_u_r <- rbind(coservice_c_u_r$m_u, coservice_c_u_r$m_r)
+tbl_w_u_r <- rbind(coservice_c_u_r$w_u, coservice_c_u_r$w_r)
+tbl_b_u_r <- rbind(coservice_c_u_r$b_u, coservice_c_u_r$b_r)
+
+cbind(tbl_m_u_r, select(tbl_w_u_r, -agerange2), select(tbl_b_u_r, -agerange2)) %>% 
+  final_tbl(.disaggregation = u_r, .s_amount = 3, .title = "Utilized other healthcare services by type of settlement", .colspan_val = 10)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# 1
+coservice_a$b_reg %>% unite_ci(.ci_amount = 1) %>% apply_hux(.col_names = coservice_reg_col_names) %>% final_tbl(reg, 1, "Both sexes", "Utilized primary healthcare services by region", 4)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# 2
+coservice_b$b_reg %>% unite_ci(.ci_amount = 1) %>% apply_hux(.col_names = coservice_reg_col_names) %>% final_tbl(reg, 1, "Both sexes", "Utilized specialized healthcare services (e.g., hospital) by region", 4)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# 3
+coservice_c$b_reg %>% unite_ci(.ci_amount = 1) %>% apply_hux(.col_names = coservice_reg_col_names) %>% final_tbl(reg, 1, "Both sexes", "Utilized other healthcare services by region", 4)
+```
+
+<br>
+
+**Analysis information**:
+
+- Questions used: CO5, CO6a-c
+- R script name: COservice
+
+***
+
+
+
+**Effects of long COVID**
+
+Description: Proportion of the population with long-term symptoms that reduce their ability to carry out day-to-day activities compared with the time before they had COVID-19.
+
+Instrument questions:
+
+- Did you have symptoms which lasted longer than 2 months after the acute infection, which may imply that you may have "Long COVID" or "Post-COVID condition"?
+- Do those long-term symptoms reduce your ability to carry out day-to-day activities compared with the time before you had COVID-19?
+
+```{r coability_tbls, echo=FALSE}
+
+# column names to use with huxtable
+coability_c_col_names <- 
+  c("Age Group (years)", "n", "% Yes, a lot", "95% CI", "% Yes, a little", "95% CI", 
+    "% Not at all", "95% CI")
+
+# column names for region to use with huxtable
+coability_c_reg_col_names <- 
+  c("Region", "n", "% Yes, a lot", "95% CI", "% Yes, a little", "95% CI", 
+    "% Not at all", "95% CI")
+
+# men, women, both sexes
+coability_c_m_w_b <- join_tbls(coability_c, m_w_b, 3, coability_c_col_names)
+```
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# urban, rural
+coability_c_u_r <- join_tbls(coability_c, u_r, 3, coability_c_col_names)
+```
+
+<br>
+
+```{r}
+coability_c_m_w_b$m %>% 
+  set_contents(1, everywhere, coability_c_col_names) %>% 
+  final_tbl(.disaggregation = m_w_b, .s_amount = 1, .s_val = "Men", .title = "Effects of long COVID on ability to carry out day-to-day activities", .colspan_val = 8)
+```
+
+<br>
+
+```{r}
+coability_c_m_w_b$w %>% 
+  set_contents(1, everywhere, coability_c_col_names) %>% 
+  final_tbl(.disaggregation = m_w_b, .s_amount = 1, .s_val = "Women", .title = "Effects of long COVID on ability to carry out day-to-day activities", .colspan_val = 8)
+```
+
+<br>
+
+```{r}
+coability_c_m_w_b$b %>% 
+  set_contents(1, everywhere, coability_c_col_names) %>% 
+  final_tbl(.disaggregation = m_w_b, .s_amount = 1, .s_val = "Both sexes", .title = "Effects of long COVID on ability to carry out day-to-day activities", .colspan_val = 8)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+rbind(coability_c_u_r$m_u, coability_c_u_r$m_r) %>% 
+  set_contents(1, everywhere, coability_c_col_names) %>% 
+  final_tbl(.disaggregation = u_r, .s_amount = 1, .s_val = "Men", .title = "Effects of long COVID on ability to carry out day-to-day activities by type of settlement", .colspan_val = 8)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+rbind(coability_c_u_r$w_u, coability_c_u_r$w_r) %>% 
+  set_contents(1, everywhere, coability_c_col_names) %>% 
+  final_tbl(.disaggregation = u_r, .s_amount = 1, .s_val = "Women", .title = "Effects of long COVID on ability to carry out day-to-day activities by type of settlement", .colspan_val = 8)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+rbind(coability_c_u_r$b_u, coability_c_u_r$b_r) %>% 
+  set_contents(1, everywhere, coability_c_col_names) %>% 
+  final_tbl(.disaggregation = u_r, .s_amount = 1, .s_val = "Both sexes", .title = "Effects of long COVID on ability to carry out day-to-day activities by type of settlement", .colspan_val = 8)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# region
+coability_c$b_reg %>% unite_ci(.ci_amount = 3) %>% apply_hux(.col_names = coability_c_reg_col_names) %>% 
+  final_tbl(.disaggregation = reg, .s_amount = 1, .s_val = "Both sexes", .title = "Effects of long COVID on ability to carry out day-to-day activities by region", .colspan_val = 8)
+```
+
+<br>
+
+**Analysis information**:
+
+- Questions used: CO5, CO7
+- R script name:  COability
+
+***
+
+
+
+**Time off due to long COVID**
+
+Description: Proportion of the population who required time off work or studying due to long COVID symptoms.
+
+Instrument questions:
+
+- Did you have symptoms which lasted longer than 2 months after the acute infection, which may imply that you may have "Long COVID" or "Post-COVID condition"?
+- Did you require time off work or studying due to long COVID symptoms?
+
+```{r cotimeoff_tbls, echo=FALSE}
+
+# column names to use with huxtable
+cotimeoff_c_col_names <- 
+  c("Age Group (years)", "n", "% Yes", "95% CI", "% No", "95% CI", 
+    "% Don’t work or study", "95% CI")
+
+# column names for region to use with huxtable
+cotimeoff_c_reg_col_names <- 
+  c("Region", "n", "% Yes", "95% CI", "% No", "95% CI", 
+    "% Don’t work or study", "95% CI")
+
+# men, women, both sexes
+cotimeoff_c_m_w_b <- join_tbls(cotimeoff_c, m_w_b, 3, cotimeoff_c_col_names)
+```
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# urban, rural
+cotimeoff_c_u_r <- join_tbls(cotimeoff_c, u_r, 3, cotimeoff_c_col_names)
+```
+
+<br>
+
+```{r}
+cotimeoff_c_m_w_b$m %>% 
+  set_contents(1, everywhere, cotimeoff_c_col_names) %>% 
+  final_tbl(.disaggregation = m_w_b, .s_amount = 1, .s_val = "Men", .title = "Time off work or studying due to long COVID symptoms", .colspan_val = 8)
+```
+
+<br>
+
+```{r}
+cotimeoff_c_m_w_b$w %>% 
+  set_contents(1, everywhere, cotimeoff_c_col_names) %>% 
+  final_tbl(.disaggregation = m_w_b, .s_amount = 1, .s_val = "Women", .title = "Time off work or studying due to long COVID symptoms", .colspan_val = 8)
+```
+
+<br>
+
+```{r}
+cotimeoff_c_m_w_b$b %>% 
+  set_contents(1, everywhere, cotimeoff_c_col_names) %>% 
+  final_tbl(.disaggregation = m_w_b, .s_amount = 1, .s_val = "Both sexes", .title = "Time off work or studying due to long COVID symptoms", .colspan_val = 8)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+rbind(cotimeoff_c_u_r$m_u, cotimeoff_c_u_r$m_r) %>% 
+  set_contents(1, everywhere, cotimeoff_c_col_names) %>% 
+  final_tbl(.disaggregation = u_r, .s_amount = 1, .s_val = "Men", .title = "Time off work or studying due to long COVID symptoms by type of settlement", .colspan_val = 8)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+rbind(cotimeoff_c_u_r$w_u, cotimeoff_c_u_r$w_r) %>% 
+  set_contents(1, everywhere, cotimeoff_c_col_names) %>% 
+  final_tbl(.disaggregation = u_r, .s_amount = 1, .s_val = "Women", .title = "Time off work or studying due to long COVID symptoms by type of settlement", .colspan_val = 8)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+rbind(cotimeoff_c_u_r$b_u, cotimeoff_c_u_r$b_r) %>% 
+  set_contents(1, everywhere, cotimeoff_c_col_names) %>% 
+  final_tbl(.disaggregation = u_r, .s_amount = 1, .s_val = "Both sexes", .title = "Time off work or studying due to long COVID symptoms by type of settlement", .colspan_val = 8)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# region
+cotimeoff_c$b_reg %>% unite_ci(.ci_amount = 3) %>% apply_hux(.col_names = cotimeoff_c_reg_col_names) %>% 
+  final_tbl(.disaggregation = reg, .s_amount = 1, .s_val = "Both sexes", .title = "Time off work or studying due to long COVID symptoms by region", .colspan_val = 8)
+```
+
+<br>
+
+**Analysis information**:
+
+- Questions used: CO5, CO8
+- R script name:  COtimeoff
+
+***
+
+
+
+**Time off duration**
+
+Description: Mean number of days required for time off work or studying.
+
+Instrument questions:
+
+- Did you require time off work or studying due to long COVID symptoms?
+- For how long?
+
+```{r cotimeoff_co8adays_tbls}
+
+# column names to use with huxtable
+cotimeoff_co8adays_col_names <- c("Age Group (years)", "n", "Mean number", "95% CI")
+
+# column names for region to use with huxtable
+cotimeoff_co8adays_reg_col_names <- c("Region", "n", "Mean number", "95% CI")
+
+# men, women, both sexes
+cotimeoff_co8adays_m_w_b <- join_tbls(cotimeoff_co8adays, m_w_b, 1, cotimeoff_co8adays_col_names)
+```
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# urban, rural
+cotimeoff_co8adays_u_r <- join_tbls(cotimeoff_co8adays, u_r, 1, cotimeoff_co8adays_col_names)
+```
+
+<br>
+
+```{r}
+cbind(cotimeoff_co8adays_m_w_b$m, select(cotimeoff_co8adays_m_w_b$w, -agerange), 
+      select(cotimeoff_co8adays_m_w_b$b, -agerange)) %>% 
+  final_tbl(.disaggregation = m_w_b, 3, .title = "Mean number of days required for time off work or studying", .colspan_val = 10)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+tbl_m_u_r <- rbind(cotimeoff_co8adays_u_r$m_u, cotimeoff_co8adays_u_r$m_r)
+tbl_w_u_r <- rbind(cotimeoff_co8adays_u_r$w_u, cotimeoff_co8adays_u_r$w_r)
+tbl_b_u_r <- rbind(cotimeoff_co8adays_u_r$b_u, cotimeoff_co8adays_u_r$b_r)
+
+cbind(tbl_m_u_r, select(tbl_w_u_r, -agerange2), select(tbl_b_u_r, -agerange2)) %>% 
+  final_tbl(.disaggregation = u_r, .s_amount = 3, .title = "Mean number of days required for time off work or studying by type of settlement", .colspan_val = 10)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# region
+cotimeoff_co8adays$b_reg %>% unite_ci(.ci_amount = 1) %>% apply_hux(.col_names = cotimeoff_co8adays_reg_col_names) %>% 
+  final_tbl(.disaggregation = reg, .s_amount = 1, .s_val = "Both sexes", .title = "Mean number of days required for time off work or studying by region", .colspan_val = 4)
+```
+
+<br>
+
+**Analysis information**:
+
+- Questions used: CO8, CO8a, CO8a_type
+- R script name:  COtimeoff
+
+***
+
+
+
+**Long COVID symptoms resolution**
+
+Description: Proportion of the population who feel their long COVID symptoms have been resolved.
+
+Instrument questions:
+
+- Did you have symptoms which lasted longer than 2 months after the acute infection, which may imply that you may have "Long COVID" or "Post-COVID condition"?
+- Do you feel your long-term symptoms have now resolved?
+
+```{r coresolved_c_tbls}
+# column names to use with huxtable
+coresolved_c_col_names <- c("Age Group (years)", "n", "%", "95% CI")
+coresolved_c_reg_col_names <- c("Region", "n", "%", "95% CI")
+
+# men, women, both sexes
+coresolved_c_m_w_b <- join_tbls(coresolved_c, m_w_b, 1, coresolved_c_col_names)
+```
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# urban, rural
+coresolved_c_u_r <- join_tbls(coresolved_c, u_r, 1, coresolved_c_col_names)
+```
+
+<br>
+
+```{r}
+cbind(coresolved_c_m_w_b$m, select(coresolved_c_m_w_b$w, -agerange), select(coresolved_c_m_w_b$b, -agerange)) %>% 
+  final_tbl(.disaggregation = m_w_b, .s_amount = 3, .title = "Proportion of the population who feel their long COVID symptoms have been resolved", .colspan_val = 10)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+tbl_m_u_r <- rbind(coresolved_c_u_r$m_u, coresolved_c_u_r$m_r)
+tbl_w_u_r <- rbind(coresolved_c_u_r$w_u, coresolved_c_u_r$w_r)
+tbl_b_u_r <- rbind(coresolved_c_u_r$b_u, coresolved_c_u_r$b_r)
+
+cbind(tbl_m_u_r, select(tbl_w_u_r, -agerange2), select(tbl_b_u_r, -agerange2)) %>% 
+  final_tbl(.disaggregation = u_r, .s_amount = 3, .title = "Proportion of the population who feel their long COVID symptoms have been resolved by type of settlement", .colspan_val = 10)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+coresolved_c$b_reg %>% unite_ci(.ci_amount = 1) %>% apply_hux(.col_names = coresolved_c_reg_col_names) %>% 
+  final_tbl(.disaggregation = reg, .s_amount = 1, .s_val = "Both sexes", .title = "Proportion of the population who feel their long COVID symptoms have been resolved by region", .colspan_val = 4) 
+```
+
+<br>
+
+**Analysis information**:
+
+- Questions used: CO5, CO8a_type, CO9
+- R script name: COresolved
+
+***
+
+
+<br>
+<br>

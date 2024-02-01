@@ -1,0 +1,17 @@
+# R files & folders
+.Rproj.user
+.Rhistory
+.Rapp.history
+.RData
+.Ruserdata
+*.rds
+# system files .DS_Store on macOS
+.DS_Store
+# XLSX data files
+*.xlsx
+# CSV files that are produced for Fact Sheet and Data
+*.csv
+# DOCX files that are produced for Data Book
+*.docx
+*.doc
+# Folders to ignore

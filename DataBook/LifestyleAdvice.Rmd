@@ -1,0 +1,344 @@
+---
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+library(here)
+library(huxtable)
+library(tidyverse)
+library(fs)
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+# Set a root directory for all chunks to be evaluated relative to rather than the document location
+knitr::opts_knit$set(root.dir = here())
+```
+
+```{r source, include=FALSE}
+here("DataBook", "Modules", "LifestyleAdvice") %>% 
+  # list all R files in the directory
+  fs::dir_ls(regexp = "\\.R$") %>% 
+  # scale up to all R files with a map function from purrr
+  map(source, encoding = "UTF-8", local = knitr::knit_global())
+```
+
+---
+title: "`r set_title`"
+author: "`r set_author`"
+---
+
+
+# Lifestyle Advice
+
+**Doctor visit**
+
+Description: Percentage of population who visited a doctor or other health worker in the past 12 months.
+
+Instrument questions:
+
+- During the past 12 months, have you visited a doctor or other health worker?
+
+```{r hlifestyle_v_tbls}
+# column names to use with huxtable
+hlifestyle_v_col_names <- c("Age Group (years)", "n", "% Visited", "95% CI")
+hlifestyle_v_reg_col_names <- c("Region", "n", "% Visited", "95% CI")
+
+# men, women, both sexes
+hlifestyle_v_m_w_b <- join_tbls(hlifestyle_v, m_w_b, 1, hlifestyle_v_col_names)
+```
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# urban, rural
+hlifestyle_v_u_r <- join_tbls(hlifestyle_v, u_r, 1, hlifestyle_v_col_names)
+```
+
+<br>
+
+```{r}
+cbind(hlifestyle_v_m_w_b$m, select(hlifestyle_v_m_w_b$w, -agerange), select(hlifestyle_v_m_w_b$b, -agerange)) %>% final_tbl(.disaggregation = m_w_b, .s_amount = 3, .title = "Visited a doctor or other health worker in the past 12 months", .colspan_val = 10)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+tbl_m_u_r <- rbind(hlifestyle_v_u_r$m_u, hlifestyle_v_u_r$m_r)
+tbl_w_u_r <- rbind(hlifestyle_v_u_r$w_u, hlifestyle_v_u_r$w_r)
+tbl_b_u_r <- rbind(hlifestyle_v_u_r$b_u, hlifestyle_v_u_r$b_r)
+
+cbind(tbl_m_u_r, select(tbl_w_u_r, -agerange2), select(tbl_b_u_r, -agerange2)) %>% 
+  final_tbl(.disaggregation = u_r, .s_amount = 3, .title = "Visited a doctor or other health worker in the past 12 months by type of settlement", .colspan_val = 10)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+hlifestyle_v$b_reg %>% unite_ci(.ci_amount = 1) %>% apply_hux(.col_names = hlifestyle_v_reg_col_names) %>% final_tbl(reg, 1, "Both sexes", "Visited a doctor or other health worker in the past 12 months by region", 4)
+```
+
+<br>
+
+**Analysis information**:
+
+-   Questions used: H20
+-   R script name: Hlifestyle
+
+***
+
+
+
+**Lifestyle advice**
+
+Description: Percentage of population who received lifestyle advice from a doctor or health worker among those who visited either of them in the past 12 months.
+
+Instrument questions:
+
+- During any of your visits to a doctor or other health worker in the past 12 months, were you advised  to do any of the following:
+
+- Quit using tobacco or don’t start
+- Reduce salt in your diet
+- Eat at least five servings of fruit and/or vegetables each day
+- Reduce fat in your diet
+- Start or do more physical activity
+- Maintain a healthy body weight or lose weight
+- Reduce sugary beverages in your diet
+
+```{r hlifestyle_tbls}
+# column names to use with huxtable
+hlifestyle_col_names <- c("Age Group (years)", "n", "% Advised", "95% CI")
+hlifestyle_reg_col_names <- c("Region", "n", "% Advised", "95% CI")
+
+# men, women, both sexes
+# 1 (a) - Advised by doctor or health worker to quit using tobacco or don’t start
+hlifestyle_a_m_w_b <- join_tbls(hlifestyle_a, m_w_b, 1, hlifestyle_col_names)
+
+# 2 (b) - Advised by doctor or health worker to reduce salt in the diet
+hlifestyle_b_m_w_b <- join_tbls(hlifestyle_b, m_w_b, 1, hlifestyle_col_names)
+
+# 3 (c) - Advised by doctor or health worker to eat at least five servings of fruit and/or vegetables each day
+hlifestyle_c_m_w_b <- join_tbls(hlifestyle_c, m_w_b, 1, hlifestyle_col_names)
+
+# 4 (d) - Advised by doctor or health worker to reduce fat in the diet
+hlifestyle_d_m_w_b <- join_tbls(hlifestyle_d, m_w_b, 1, hlifestyle_col_names)
+
+# 5 (e) - Advised by doctor or health worker to start or do more physical activity
+hlifestyle_e_m_w_b <- join_tbls(hlifestyle_e, m_w_b, 1, hlifestyle_col_names)
+
+# 6 (f) - Advised by doctor or health worker to maintain a healthy body weight or to lose weight
+hlifestyle_f_m_w_b <- join_tbls(hlifestyle_f, m_w_b, 1, hlifestyle_col_names)
+
+# 7 (g) - Advised by doctor or health worker to reduce sugary beverages in diet
+hlifestyle_g_m_w_b <- join_tbls(hlifestyle_g, m_w_b, 1, hlifestyle_col_names)
+```
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# urban, rural
+# 1 - Advised by doctor or health worker to quit using tobacco or don’t start
+hlifestyle_a_u_r <- join_tbls(hlifestyle_a, u_r, 1, hlifestyle_col_names)
+# 2 - Advised by doctor or health worker to reduce salt in the diet
+hlifestyle_b_u_r <- join_tbls(hlifestyle_b, u_r, 1, hlifestyle_col_names)
+# 3 - Advised by doctor or health worker to eat at least five servings of fruit and/or vegetables each day
+hlifestyle_c_u_r <- join_tbls(hlifestyle_c, u_r, 1, hlifestyle_col_names)
+# 4 - Advised by doctor or health worker to reduce fat in the diet
+hlifestyle_d_u_r <- join_tbls(hlifestyle_d, u_r, 1, hlifestyle_col_names)
+# 5 - Advised by doctor or health worker to start or do more physical activity
+hlifestyle_e_u_r <- join_tbls(hlifestyle_e, u_r, 1, hlifestyle_col_names)
+# 6 - Advised by doctor or health worker to maintain a healthy body weight or to lose weight
+hlifestyle_f_u_r <- join_tbls(hlifestyle_f, u_r, 1, hlifestyle_col_names)
+# 7 - Advised by doctor or health worker to reduce sugary beverages in diet
+hlifestyle_g_u_r <- join_tbls(hlifestyle_g, u_r, 1, hlifestyle_col_names)
+```
+
+<br>
+
+```{r}
+# 1
+cbind(hlifestyle_a_m_w_b$m, select(hlifestyle_a_m_w_b$w, -agerange), select(hlifestyle_a_m_w_b$b, -agerange)) %>% final_tbl(.disaggregation = m_w_b, .s_amount = 3, .title = "Advised by doctor or health worker to quit using tobacco or don’t start", .colspan_val = 10)
+```
+
+<br>
+
+```{r}
+# 2
+cbind(hlifestyle_b_m_w_b$m, select(hlifestyle_b_m_w_b$w, -agerange), select(hlifestyle_b_m_w_b$b, -agerange)) %>% final_tbl(.disaggregation = m_w_b, .s_amount = 3, .title = "Advised by doctor or health worker to reduce salt in the diet", .colspan_val = 10)
+```
+
+<br>
+
+```{r}
+# 3
+cbind(hlifestyle_c_m_w_b$m, select(hlifestyle_c_m_w_b$w, -agerange), select(hlifestyle_c_m_w_b$b, -agerange)) %>% final_tbl(.disaggregation = m_w_b, .s_amount = 3, .title = "Advised by doctor or health worker to eat at least five servings of fruit and/or vegetables each day", .colspan_val = 10)
+```
+
+<br>
+
+```{r}
+# 4
+cbind(hlifestyle_d_m_w_b$m, select(hlifestyle_d_m_w_b$w, -agerange), select(hlifestyle_d_m_w_b$b, -agerange)) %>% final_tbl(.disaggregation = m_w_b, .s_amount = 3, .title = "Advised by doctor or health worker to reduce fat in the diet", .colspan_val = 10)
+```
+
+<br>
+
+```{r}
+# 5
+cbind(hlifestyle_e_m_w_b$m, select(hlifestyle_e_m_w_b$w, -agerange), select(hlifestyle_e_m_w_b$b, -agerange)) %>% final_tbl(.disaggregation = m_w_b, .s_amount = 3, .title = "Advised by doctor or health worker to start or do more physical activity", .colspan_val = 10)
+```
+
+<br>
+
+```{r}
+# 6
+cbind(hlifestyle_f_m_w_b$m, select(hlifestyle_f_m_w_b$w, -agerange), select(hlifestyle_f_m_w_b$b, -agerange)) %>% final_tbl(.disaggregation = m_w_b, .s_amount = 3, .title = "Advised by doctor or health worker to maintain a healthy body weight or to lose weight", .colspan_val = 10)
+```
+
+<br>
+
+```{r}
+# 7
+cbind(hlifestyle_g_m_w_b$m, select(hlifestyle_g_m_w_b$w, -agerange), select(hlifestyle_g_m_w_b$b, -agerange)) %>% final_tbl(.disaggregation = m_w_b, .s_amount = 3, .title = "Advised by doctor or health worker to reduce sugary beverages in diet", .colspan_val = 10)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# 1
+tbl_m_u_r <- rbind(hlifestyle_a_u_r$m_u, hlifestyle_a_u_r$m_r)
+tbl_w_u_r <- rbind(hlifestyle_a_u_r$w_u, hlifestyle_a_u_r$w_r)
+tbl_b_u_r <- rbind(hlifestyle_a_u_r$b_u, hlifestyle_a_u_r$b_r)
+
+cbind(tbl_m_u_r, select(tbl_w_u_r, -agerange2), select(tbl_b_u_r, -agerange2)) %>% 
+  final_tbl(.disaggregation = u_r, .s_amount = 3, .title = "Advised by doctor or health worker to quit using tobacco or don’t start by type of settlement", .colspan_val = 10)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# 2
+tbl_m_u_r <- rbind(hlifestyle_b_u_r$m_u, hlifestyle_b_u_r$m_r)
+tbl_w_u_r <- rbind(hlifestyle_b_u_r$w_u, hlifestyle_b_u_r$w_r)
+tbl_b_u_r <- rbind(hlifestyle_b_u_r$b_u, hlifestyle_b_u_r$b_r)
+
+cbind(tbl_m_u_r, select(tbl_w_u_r, -agerange2), select(tbl_b_u_r, -agerange2)) %>% 
+  final_tbl(.disaggregation = u_r, .s_amount = 3, .title = "Advised by doctor or health worker to reduce salt in the diet by type of settlement", .colspan_val = 10)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# 3
+tbl_m_u_r <- rbind(hlifestyle_c_u_r$m_u, hlifestyle_c_u_r$m_r)
+tbl_w_u_r <- rbind(hlifestyle_c_u_r$w_u, hlifestyle_c_u_r$w_r)
+tbl_b_u_r <- rbind(hlifestyle_c_u_r$b_u, hlifestyle_c_u_r$b_r)
+
+cbind(tbl_m_u_r, select(tbl_w_u_r, -agerange2), select(tbl_b_u_r, -agerange2)) %>% 
+  final_tbl(.disaggregation = u_r, .s_amount = 3, .title = "Advised by doctor or health worker to eat at least five servings of fruit and/or vegetables each day by type of settlement", .colspan_val = 10)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# 4
+tbl_m_u_r <- rbind(hlifestyle_d_u_r$m_u, hlifestyle_d_u_r$m_r)
+tbl_w_u_r <- rbind(hlifestyle_d_u_r$w_u, hlifestyle_d_u_r$w_r)
+tbl_b_u_r <- rbind(hlifestyle_d_u_r$b_u, hlifestyle_d_u_r$b_r)
+
+cbind(tbl_m_u_r, select(tbl_w_u_r, -agerange2), select(tbl_b_u_r, -agerange2)) %>% 
+  final_tbl(.disaggregation = u_r, .s_amount = 3, .title = "Advised by doctor or health worker to reduce fat in the diet by type of settlement", .colspan_val = 10)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# 5
+tbl_m_u_r <- rbind(hlifestyle_e_u_r$m_u, hlifestyle_e_u_r$m_r)
+tbl_w_u_r <- rbind(hlifestyle_e_u_r$w_u, hlifestyle_e_u_r$w_r)
+tbl_b_u_r <- rbind(hlifestyle_e_u_r$b_u, hlifestyle_e_u_r$b_r)
+
+cbind(tbl_m_u_r, select(tbl_w_u_r, -agerange2), select(tbl_b_u_r, -agerange2)) %>% 
+  final_tbl(.disaggregation = u_r, .s_amount = 3, .title = "Advised by doctor or health worker to start or do more physical activity by type of settlement", .colspan_val = 10)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# 6
+tbl_m_u_r <- rbind(hlifestyle_f_u_r$m_u, hlifestyle_f_u_r$m_r)
+tbl_w_u_r <- rbind(hlifestyle_f_u_r$w_u, hlifestyle_f_u_r$w_r)
+tbl_b_u_r <- rbind(hlifestyle_f_u_r$b_u, hlifestyle_f_u_r$b_r)
+
+cbind(tbl_m_u_r, select(tbl_w_u_r, -agerange2), select(tbl_b_u_r, -agerange2)) %>% 
+  final_tbl(.disaggregation = u_r, .s_amount = 3, .title = "Advised by doctor or health worker to maintain a healthy body weight or to lose weight by type of settlement", .colspan_val = 10)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# 7
+tbl_m_u_r <- rbind(hlifestyle_g_u_r$m_u, hlifestyle_g_u_r$m_r)
+tbl_w_u_r <- rbind(hlifestyle_g_u_r$w_u, hlifestyle_g_u_r$w_r)
+tbl_b_u_r <- rbind(hlifestyle_g_u_r$b_u, hlifestyle_g_u_r$b_r)
+
+cbind(tbl_m_u_r, select(tbl_w_u_r, -agerange2), select(tbl_b_u_r, -agerange2)) %>% 
+  final_tbl(.disaggregation = u_r, .s_amount = 3, .title = "Advised by doctor or health worker to reduce sugary beverages in diet by type of settlement", .colspan_val = 10)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# 1
+hlifestyle_a$b_reg %>% unite_ci(.ci_amount = 1) %>% apply_hux(.col_names = hlifestyle_reg_col_names) %>% final_tbl(reg, 1, "Both sexes", "Advised by doctor or health worker to quit using tobacco or don’t start by region", 4)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# 2
+hlifestyle_b$b_reg %>% unite_ci(.ci_amount = 1) %>% apply_hux(.col_names = hlifestyle_reg_col_names) %>% final_tbl(reg, 1, "Both sexes", "Advised by doctor or health worker to reduce salt in the diet by region", 4)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# 3
+hlifestyle_c$b_reg %>% unite_ci(.ci_amount = 1) %>% apply_hux(.col_names = hlifestyle_reg_col_names) %>% final_tbl(reg, 1, "Both sexes", "Advised by doctor or health worker to eat at least five servings of fruit and/or vegetables each day by region", 4)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# 4
+hlifestyle_d$b_reg %>% unite_ci(.ci_amount = 1) %>% apply_hux(.col_names = hlifestyle_reg_col_names) %>% final_tbl(reg, 1, "Both sexes", "Advised by doctor or health worker to reduce fat in the diet by region", 4)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# 5
+hlifestyle_e$b_reg %>% unite_ci(.ci_amount = 1) %>% apply_hux(.col_names = hlifestyle_reg_col_names) %>% final_tbl(reg, 1, "Both sexes", "Advised by doctor or health worker to start or do more physical activity by region", 4)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# 6
+hlifestyle_f$b_reg %>% unite_ci(.ci_amount = 1) %>% apply_hux(.col_names = hlifestyle_reg_col_names) %>% final_tbl(reg, 1, "Both sexes", "Advised by doctor or health worker to maintain a healthy body weight or to lose weight by region", 4)
+```
+
+<br>
+
+```{r, eval=.GlobalEnv$.u_r_reg==TRUE}
+# 7
+hlifestyle_g$b_reg %>% unite_ci(.ci_amount = 1) %>% apply_hux(.col_names = hlifestyle_reg_col_names) %>% final_tbl(reg, 1, "Both sexes", "Advised by doctor or health worker to reduce sugary beverages in diet by region", 4)
+```
+
+<br>
+
+**Analysis information**:
+
+-   Questions used: H20a-g
+-   R script name: Hlifestyle
+
+***
+
+
+
+<br> 
+
+<br>
